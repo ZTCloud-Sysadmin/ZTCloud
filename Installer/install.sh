@@ -13,10 +13,13 @@ export LOGFILE="/var/log/ztcloud-install.log"
 mkdir -p "$(dirname "$LOGFILE")"
 touch "$LOGFILE"
 
-# Load shared utilities + Docker install logic
+# Load shared utilities
 source "$(dirname "$0")/base.sh"
 
-# Run shared Docker setup
+# Run system base package setup first
+install_basic_packages
+
+# Then install Docker (which depends on base tools like curl/gpg)
 install_docker
 
 # Branch to mode-specific setup
