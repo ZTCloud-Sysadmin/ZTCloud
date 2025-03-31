@@ -8,6 +8,11 @@ if [[ -z "$ACTION" ]]; then
     exit 1
 fi
 
+# Set up logging file before sourcing any utilities
+export LOGFILE="/var/log/ztcloud-install.log"
+mkdir -p "$(dirname "$LOGFILE")"
+touch "$LOGFILE"
+
 # Load shared utilities + Docker install logic
 source "$(dirname "$0")/base.sh"
 
