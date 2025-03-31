@@ -7,5 +7,5 @@ wget -O - https://raw.githubusercontent.com/ZTCloud-Sysadmin/ZTCloud/main/bootst
 
 Dry-run mode:
 ```bash
-wget -O - https://raw.githubusercontent.com/ZTCloud-Sysadmin/ZTCloud/main/bootstrap.sh | bash -s -- --dry-run --deploy
+wget -O - https://raw.githubusercontent.com/ZTCloud-Sysadmin/ZTCloud/main/bootstrap.sh | bash -s -- --dry-run --init
 ```

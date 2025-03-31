@@ -61,8 +61,25 @@ else
 fi
 
 # --- Run main installer ---
-log "[INFO] Running installer: install.sh $ACTION"
 cd "$INSTALL_DIR/Installer"
+
+if [[ ! -x "./install.sh" ]]; then
+  log "[WARN] install.sh is not executable."
+  log "[INFO] Attempting to auto-fix permissions for all .sh scripts..."
+  
+  find . -type f -name "*.sh" -exec chmod +x {} \;
+
+  if [[ ! -x "./install.sh" ]]; then
+    log "[ERROR] Failed to fix permissions. Please run manually:"
+    log "        chmod +x $INSTALL_DIR/Installer/*.sh"
+    log "        chmod +x $INSTALL_DIR/Installer/*/*.sh"
+    exit 1
+  else
+    log "[INFO] Permissions fixed successfully."
+  fi
+fi
+
+log "[INFO] Running installer: install.sh $ACTION"
 ./install.sh "$ACTION" | tee -a "$LOG_FILE"
 
 log "ZTCloud bootstrap completed."
