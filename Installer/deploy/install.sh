@@ -2,7 +2,8 @@
 
 log_info "Running additional DEPLOY (remote VM) setup..."
 
-# Example: SSH key setup, ZeroTier join, etc.
-# curl https://myserver/zt-join.sh | bash
+# Load and run ZeroTier join logic
+source "$(dirname "$0")/zerotier.sh"
+install_zerotier_client
 
 log_info "DEPLOY setup completed."

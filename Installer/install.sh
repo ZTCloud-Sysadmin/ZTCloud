@@ -19,6 +19,9 @@ source "$(dirname "$0")/base.sh"
 # Run system base package setup first
 install_basic_packages
 
+# Install and securing OS
+install_hardening
+
 # Then install Docker (which depends on base tools like curl/gpg)
 install_docker
 

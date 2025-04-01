@@ -18,3 +18,4 @@ log_error() {
 # Source installer parts
 source "$(dirname "$0")/base/default.sh"
 source "$(dirname "$0")/base/docker.sh"
+source "$(dirname "$0")/base/hardening.sh"
