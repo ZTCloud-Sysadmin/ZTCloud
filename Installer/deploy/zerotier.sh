@@ -3,25 +3,54 @@
 install_zerotier_client() {
   log_info "Installing ZeroTier and joining controller network..."
 
-  # Expected SSH connection details for the controller
+  # Controller config
   CONTROLLER_USER="root"
-  CONTROLLER_HOST="192.168.10.100"  # Replace with actual --init IP
+  CONTROLLER_HOST="192.168.10.100"  # Update as needed
   MOON_DEST_DIR="/opt/ztcloud/zerotier"
-  mkdir -p "$MOON_DEST_DIR"
+  ZT_INSTALL_DIR="/opt/ZTCloud/bin/zerotier"
+  ZT_DEB_PATH="/opt/ZTCloud/installer/binary/zerotier/deb/bookworm/zerotier-one_1.8.9_amd64.deb"
 
-  # Install ZeroTier if not present
+  mkdir -p "$MOON_DEST_DIR"
+  mkdir -p "$ZT_INSTALL_DIR"
+
+  # Install from .deb if not already installed
   if ! command -v zerotier-one &>/dev/null; then
-    log_info "Installing ZeroTier client..."
-    curl -s https://install.zerotier.com | bash
+    log_info "Installing ZeroTier from local .deb package..."
+
+    if [[ ! -f "$ZT_DEB_PATH" ]]; then
+      log_error "ZeroTier .deb file not found at $ZT_DEB_PATH"
+      exit 1
+    fi
+
+    dpkg -x "$ZT_DEB_PATH" "$ZT_INSTALL_DIR"
+    ln -sf "$ZT_INSTALL_DIR/usr/sbin/zerotier-one" /usr/local/bin/zerotier-one
+    ln -sf "$ZT_INSTALL_DIR/usr/sbin/zerotier-idtool" /usr/local/bin/zerotier-idtool
   else
     log_info "ZeroTier is already installed."
   fi
 
-  # Ensure service is running
+  # Create systemd unit
+  log_info "Creating ZeroTier systemd service..."
+  cat <<EOF > /etc/systemd/system/zerotier-one.service
+[Unit]
+Description=ZeroTier One Client
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/zerotier-one
+ExecStartPost=/bin/sleep 2
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  systemctl daemon-reexec
+  systemctl daemon-reload
   systemctl enable zerotier-one
   systemctl start zerotier-one
 
-  # Fetch latest moon file from controller
+  # Fetch Moon file
   log_info "Fetching moon file from controller at $CONTROLLER_HOST..."
   scp "$CONTROLLER_USER@$CONTROLLER_HOST:/opt/ztcloud/zerotier/*.moon" "$MOON_DEST_DIR/"
 
@@ -30,15 +59,12 @@ install_zerotier_client() {
     exit 1
   fi
 
-  # Move moon file into ZeroTier's moons.d
   cp "$MOON_DEST_DIR"/*.moon /var/lib/zerotier-one/moons.d/
   log_info "Moon file installed."
 
-  # Restart to activate Moon
   systemctl restart zerotier-one
   sleep 5
 
-  # Show identity
   if [[ -f /var/lib/zerotier-one/identity.public ]]; then
     ZT_ID=$(cut -d ':' -f1 /var/lib/zerotier-one/identity.public)
     log_info "This node's ZeroTier ID: $ZT_ID"

@@ -3,19 +3,44 @@
 install_zerotier_controller() {
   log_info "Installing ZeroTier controller..."
 
-  # Prepare dir
+  # Prepare install paths
+  ZT_INSTALL_DIR="/opt/ZTCloud/bin/zerotier"
+  ZT_DEB_PATH="/opt/ZTCloud/installer/binary/zerotier/deb/bookworm/zerotier-one_1.8.9_amd64.deb"
+  mkdir -p "$ZT_INSTALL_DIR"
   mkdir -p /opt/ztcloud/zerotier
-  cd /opt/ztcloud/zerotier
 
-  # Install ZeroTier
+  # Install from .deb if not already installed
   if ! command -v zerotier-one &>/dev/null; then
-    log_info "Downloading and installing ZeroTier..."
-    curl -s https://install.zerotier.com | bash
+    log_info "Installing ZeroTier from local .deb package..."
+    if [[ ! -f "$ZT_DEB_PATH" ]]; then
+      log_error "ZeroTier .deb file not found at $ZT_DEB_PATH"
+      exit 1
+    fi
+
+    dpkg -x "$ZT_DEB_PATH" "$ZT_INSTALL_DIR"
+    ln -sf "$ZT_INSTALL_DIR/usr/sbin/zerotier-one" /usr/local/bin/zerotier-one
+    ln -sf "$ZT_INSTALL_DIR/usr/sbin/zerotier-idtool" /usr/local/bin/zerotier-idtool
   else
     log_info "ZeroTier is already installed."
   fi
 
-  # Enable and start service
+  # Setup systemd service manually
+  log_info "Configuring ZeroTier systemd service..."
+  cat <<EOF > /etc/systemd/system/zerotier-one.service
+[Unit]
+Description=ZeroTier One Controller
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/zerotier-one
+ExecStartPost=/bin/sleep 2
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  systemctl daemon-reload
   systemctl enable zerotier-one
   systemctl start zerotier-one
 
@@ -26,7 +51,7 @@ install_zerotier_controller() {
     exit 1
   fi
 
-  ZT_PUBLIC_ID=$(cat "$ZT_IDENTITY_FILE" | cut -d ':' -f1)
+  ZT_PUBLIC_ID=$(cut -d ':' -f1 "$ZT_IDENTITY_FILE")
   log_info "ZeroTier public identity: $ZT_PUBLIC_ID"
 
   # Fetch public WAN IP
@@ -38,18 +63,19 @@ install_zerotier_controller() {
   log_info "Detected public WAN IP: $WAN_IP"
 
   # Generate Moon config
+  cd /opt/ztcloud/zerotier
   log_info "Creating Moon (planet) configuration..."
-  zerotier-idtool initmoon identity.public
+  zerotier-idtool initmoon "$ZT_IDENTITY_FILE"
   MOON_ID=$(ls *.moon | sed 's/.moon//')
 
   jq ".roots[0].stableEndpoints = [\"$WAN_IP/9993\"]" "$MOON_ID.moon" > "$MOON_ID.moon.tmp"
   mv "$MOON_ID.moon.tmp" "$MOON_ID.moon"
 
-  # Sign moon
+  # Sign moon and deploy
   zerotier-idtool genmoon "$MOON_ID.moon"
+  mkdir -p /var/lib/zerotier-one/moons.d
   cp "$MOON_ID.moon.d" /var/lib/zerotier-one/moons.d/ -r
 
-  # Restart ZeroTier to load moon
   systemctl restart zerotier-one
 
   log_info "Moon generated and applied. Moon ID: $MOON_ID"
