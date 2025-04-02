@@ -2,8 +2,8 @@
 
 log_info "Running additional DEPLOY (remote VM) setup..."
 
-# Load and run ZeroTier join logic
-source "$(dirname "$0")/zerotier.sh"
+DEPLOY_DIR="$(dirname "$0")"
+source "$DEPLOY_DIR/zerotier.sh"
 install_zerotier_client
 
 log_info "DEPLOY setup completed."
