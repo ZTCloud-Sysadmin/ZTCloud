@@ -9,7 +9,7 @@ if [[ -z "$ACTION" ]]; then
 fi
 
 # Set up logging file before sourcing any utilities
-export LOGFILE="/var/log/ztcloud-install.log"
+export LOGFILE="/opt/log/installer/ztcloud-install.log"
 mkdir -p "$(dirname "$LOGFILE")"
 touch "$LOGFILE"
 
