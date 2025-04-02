@@ -34,6 +34,28 @@ if [[ -z "$ACTION" ]]; then
   exit 1
 fi
 
+# --- Check and auto-fix system clock if skewed ---
+log "[INFO] Checking system clock accuracy..."
+
+CURRENT_EPOCH=$(date +%s)
+THRESHOLD_EPOCH=$(date --date="2025-03-30" +%s)
+
+if (( CURRENT_EPOCH > THRESHOLD_EPOCH + 86400 || CURRENT_EPOCH < THRESHOLD_EPOCH - 86400 )); then
+  log "[WARN] System clock appears to be off (current: $(date))"
+  log "[INFO] Attempting to auto-correct with timedatectl..."
+
+  if timedatectl set-ntp true 2>/dev/null; then
+    log "[INFO] NTP enabled via timedatectl. Waiting for sync..."
+    sleep 5
+    log "[INFO] New system time: $(date)"
+  else
+    log "[ERROR] Failed to enable NTP with timedatectl. Please set time manually:"
+    log "        timedatectl set-time 'YYYY-MM-DD HH:MM:SS'"
+  fi
+else
+  log "[INFO] System clock appears to be within acceptable range: $(date)"
+fi
+
 # --- Ensure git is available ---
 if ! command -v git &>/dev/null; then
   log "[INFO] Git not found. Installing minimal git support..."
@@ -83,3 +105,12 @@ log "[INFO] Running installer: install.sh $ACTION"
 ./install.sh "$ACTION" | tee -a "$LOG_FILE"
 
 log "ZTCloud bootstrap completed."
+
+# --- Final NTP status check ---
+log "[INFO] Re-checking system clock after bootstrap..."
+if timedatectl status | grep -q 'NTP synchronized: yes'; then
+  log "[INFO] NTP is synchronized. Current system time: $(date)"
+else
+  log "[WARN] NTP is still not synchronized. System time may be off: $(date)"
+  log "[INFO] Consider running: timedatectl set-ntp true && timedatectl status"
+fi
