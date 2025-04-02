@@ -40,3 +40,6 @@ case "$ACTION" in
     exit 1
     ;;
 esac
+
+# Final cleanup
+source "$(dirname "$0")/cleanup.sh"
