@@ -17,6 +17,19 @@ log() {
   echo "[$(timestamp)] $1" | tee -a "$LOG_FILE"
 }
 
+ntp_sync_check() {
+  log "[INFO] Verifying NTP synchronization..."
+  for i in {1..10}; do
+    if timedatectl status | grep -q 'NTP synchronized: yes'; then
+      log "[INFO] NTP is synchronized. Current system time: $(date)"
+      return
+    fi
+    sleep 1
+  done
+  log "[WARN] NTP is still not synchronized. System time may be off: $(date)"
+  log "[INFO] Consider running: timedatectl set-ntp true && timedatectl status"
+}
+
 # --- Setup log directory ---
 mkdir -p "$LOG_DIR"
 touch "$LOG_FILE"
@@ -55,6 +68,8 @@ if (( CURRENT_EPOCH > THRESHOLD_EPOCH + 86400 || CURRENT_EPOCH < THRESHOLD_EPOCH
 else
   log "[INFO] System clock appears to be within acceptable range: $(date)"
 fi
+
+ntp_sync_check
 
 # --- Ensure git is available ---
 if ! command -v git &>/dev/null; then
@@ -107,10 +122,4 @@ log "[INFO] Running installer: install.sh $ACTION"
 log "ZTCloud bootstrap completed."
 
 # --- Final NTP status check ---
-log "[INFO] Re-checking system clock after bootstrap..."
-if timedatectl status | grep -q 'NTP synchronized: yes'; then
-  log "[INFO] NTP is synchronized. Current system time: $(date)"
-else
-  log "[WARN] NTP is still not synchronized. System time may be off: $(date)"
-  log "[INFO] Consider running: timedatectl set-ntp true && timedatectl status"
-fi
+ntp_sync_check
