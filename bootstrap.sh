@@ -8,6 +8,7 @@ LOG_DIR="/opt/log/installer"
 LOG_FILE="$LOG_DIR/ztcloud-bootstrap.log"
 ACTION="$1"
 DRY_RUN=false
+FORCE_CLOCK_RESET=false
 
 timestamp() {
   date "+%Y-%m-%d %H:%M:%S"
@@ -42,9 +43,25 @@ if [[ "$ACTION" == "--dry-run" ]]; then
   ACTION="$2"
 fi
 
+if [[ "$ACTION" == "--force-clock-reset" ]]; then
+  FORCE_CLOCK_RESET=true
+  ACTION="$2"
+elif [[ "$1" == "--dry-run" && "$2" == "--force-clock-reset" ]]; then
+  DRY_RUN=true
+  FORCE_CLOCK_RESET=true
+  ACTION="$3"
+fi
+
 if [[ -z "$ACTION" ]]; then
-  log "[ERROR] Usage: $0 [--dry-run] [--init | --deploy]"
+  log "[ERROR] Usage: $0 [--dry-run] [--force-clock-reset] [--init | --deploy]"
   exit 1
+fi
+
+# --- Optional forced clock reset ---
+if $FORCE_CLOCK_RESET; then
+  log "[INFO] --force-clock-reset enabled. Forcing time to: 2025-03-30 12:00:00"
+  timedatectl set-time "2025-03-30 12:00:00"
+  log "[INFO] Time forcibly reset. Current system time: $(date)"
 fi
 
 # --- Check and auto-fix system clock if skewed ---

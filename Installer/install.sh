@@ -1,45 +1,42 @@
 #!/bin/bash
-set -e
 
-ACTION="$1"
+install_tailscale_client() {
+  log_info "Installing Tailscale client from local .deb..."
 
-if [[ -z "$ACTION" ]]; then
-    echo "Usage: $0 [--init | --deploy]"
-    exit 1
-fi
+  BIN_DIR="/opt/ZTCloud/bin"
+  mkdir -p "$BIN_DIR"
 
-# Set up logging file before sourcing any utilities
-export LOGFILE="/opt/log/installer/ztcloud-install.log"
-mkdir -p "$(dirname "$LOGFILE")"
-touch "$LOGFILE"
+  # Install from local .deb
+  dpkg -i /opt/ZTCloud/installer/Installer/binary/tailscale/tailscale_1.82.0_amd64.deb
 
-# Load shared utilities
-source "$(dirname "$0")/base.sh"
+  ensure_custom_path
 
-# Run system base package setup first
-install_basic_packages
+  # Copy tailscaled binary to managed bin dir
+  cp $(which tailscaled) "$BIN_DIR/tailscaled"
+  chmod +x "$BIN_DIR/tailscaled"
 
-# Install and securing OS
-install_hardening
+  # Create systemd unit for tailscaled
+  cat <<EOF > /etc/systemd/system/tailscaled.service
+[Unit]
+Description=Tailscale Daemon
+After=network.target
 
-# Then install Docker (which depends on base tools like curl/gpg)
-install_docker
+[Service]
+ExecStart=$BIN_DIR/tailscaled --tun=userspace-networking --socks5-server=localhost:1055
+Restart=always
+User=root
+WorkingDirectory=/opt/ZTCloud/
+StandardOutput=append:/opt/log/installer/tailscaled.log
+StandardError=inherit
 
-# Branch to mode-specific setup
-case "$ACTION" in
-  --init)
-    log_info "Continuing with INIT setup..."
-    source "$(dirname "$0")/init/install.sh"
-    ;;
-  --deploy)
-    log_info "Continuing with DEPLOY setup..."
-    source "$(dirname "$0")/deploy/install.sh"
-    ;;
-  *)
-    log_error "Unknown option: $ACTION"
-    exit 1
-    ;;
-esac
+[Install]
+WantedBy=multi-user.target
+EOF
 
-# Final cleanup
-source "$(dirname "$0")/cleanup.sh"
+  systemctl daemon-reexec
+  systemctl daemon-reload
+  systemctl enable tailscaled
+  systemctl start tailscaled
+
+  log_info "Tailscale client installed and service started."
+}
