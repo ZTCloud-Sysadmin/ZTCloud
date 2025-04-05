@@ -9,16 +9,19 @@ source /opt/ztcloud/helpers/common.sh
 source /opt/ztcloud/helpers/ssh_config.sh
 
 # ------------------------------------------------------------
+# Global Settings
+# ------------------------------------------------------------
+USER_SYSADMIN="ztcl-sysadmin"
+
+# ------------------------------------------------------------
 # Create system user
 # ------------------------------------------------------------
 create_system_user() {
-    local user="ztcl-sysadmin"
-
-    log_info "Creating system user $user"
-    if ! id "$user" >/dev/null 2>&1; then
-        useradd -m -s /bin/bash "$user"
+    log_info "Creating system user $USER_SYSADMIN"
+    if ! id "$USER_SYSADMIN" >/dev/null 2>&1; then
+        useradd -m -s /bin/bash "$USER_SYSADMIN"
     else
-        log_warn "User $user already exists. Skipping creation."
+        log_warn "User $USER_SYSADMIN already exists. Skipping creation."
     fi
 }
 
@@ -26,29 +29,28 @@ create_system_user() {
 # Setup SSH key and authorized_keys
 # ------------------------------------------------------------
 setup_ssh_for_user() {
-    local user="ztcl-sysadmin"
-    local ssh_dir="/home/$user/.ssh"
+    local ssh_dir="/home/$USER_SYSADMIN/.ssh"
     local keys_dir="$BASE_DIR/keys"
-    local private_key="$keys_dir/${user}_id_rsa"
+    local private_key="$keys_dir/${USER_SYSADMIN}_id_rsa"
     local public_key="$ssh_dir/id_rsa.pub"
 
-    log_info "Setting up SSH directory for $user"
+    log_info "Setting up SSH directory for $USER_SYSADMIN"
 
     mkdir -p "$ssh_dir"
     chmod 700 "$ssh_dir"
-    chown "$user:$user" "$ssh_dir"
+    chown "$USER_SYSADMIN:$USER_SYSADMIN" "$ssh_dir"
 
     if [ ! -f "$ssh_dir/id_rsa" ]; then
-        log_info "Generating SSH keypair for $user"
-        sudo -u "$user" ssh-keygen -t rsa -b 4096 -f "$ssh_dir/id_rsa" -N ""
+        log_info "Generating SSH keypair for $USER_SYSADMIN"
+        sudo -u "$USER_SYSADMIN" ssh-keygen -t rsa -b 4096 -f "$ssh_dir/id_rsa" -N ""
     else
-        log_warn "SSH keypair already exists for $user. Skipping generation."
+        log_warn "SSH keypair already exists for $USER_SYSADMIN. Skipping generation."
     fi
 
-    log_info "Creating authorized_keys for $user"
+    log_info "Creating authorized_keys for $USER_SYSADMIN"
     cat "$public_key" > "$ssh_dir/authorized_keys"
     chmod 600 "$ssh_dir/authorized_keys"
-    chown "$user:$user" "$ssh_dir/authorized_keys"
+    chown "$USER_SYSADMIN:$USER_SYSADMIN" "$ssh_dir/authorized_keys"
 
     # Copy private key to a safe location
     log_info "Saving private SSH key to $keys_dir"
@@ -61,12 +63,11 @@ setup_ssh_for_user() {
 # Setup passwordless sudo
 # ------------------------------------------------------------
 setup_passwordless_sudo() {
-    local user="ztcl-sysadmin"
-    local sudoers_file="/etc/sudoers.d/$user"
+    local sudoers_file="/etc/sudoers.d/$USER_SYSADMIN"
 
-    log_info "Configuring passwordless sudo for $user"
+    log_info "Configuring passwordless sudo for $USER_SYSADMIN"
 
-    echo "$user ALL=(ALL) NOPASSWD:ALL" > "$sudoers_file"
+    echo "$USER_SYSADMIN ALL=(ALL) NOPASSWD:ALL" > "$sudoers_file"
     chmod 440 "$sudoers_file"
 }
 
@@ -85,12 +86,12 @@ if [ "$DISABLE_SSH_PASSWORD_LOGIN" = "true" ]; then
     disable_ssh_password_login
 fi
 
-log_info "System user ztcl-sysadmin setup completed."
+log_info "System user $USER_SYSADMIN setup completed."
 
 # ------------------------------------------------------------
 # WARN the user about the private key
 # ------------------------------------------------------------
-log_warn "Private SSH key saved at $BASE_DIR/keys/${user}_id_rsa"
+log_warn "Private SSH key saved at $BASE_DIR/keys/${USER_SYSADMIN}_id_rsa"
 log_warn "Please download it securely over Tailscale and DELETE it from the server!"
 log_warn "Failure to do so can create a security risk!"
 
