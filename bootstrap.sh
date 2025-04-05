@@ -21,15 +21,37 @@ log() {
 
 ntp_sync_check() {
   log "[INFO] Verifying NTP synchronization..."
-  for i in {1..10}; do
-    if timedatectl status | grep -q 'NTP synchronized: yes'; then
+  
+  local attempts=0
+  local max_attempts=3
+
+  while (( attempts < max_attempts )); do
+    if timedatectl show | grep -q 'SystemClockSynchronized=yes'; then
       log "[INFO] NTP is synchronized. Current system time: $(date)"
-      return
+      return 0
     fi
-    sleep 1
+    log "[WARN] NTP not yet synchronized. Waiting 10 seconds (attempt $((attempts + 1))/$max_attempts)..."
+    sleep 10
+    ((attempts++))
   done
-  log "[WARN] NTP is still not synchronized. System time may be off: $(date)"
-  log "[INFO] Consider running: timedatectl set-ntp true && timedatectl status"
+
+  log "[ERROR] NTP synchronization failed after $((max_attempts * 10)) seconds. Attempting manual fallback sync using ntpdate..."
+
+  if command -v ntpdate &>/dev/null; then
+    ntpdate -u pool.ntp.org && log "[INFO] Manual fallback NTP sync successful." && return 0
+  else
+    log "[WARN] ntpdate not installed, installing now..."
+    apt-get update && apt-get install -y ntpdate
+    ntpdate -u pool.ntp.org && log "[INFO] Manual fallback NTP sync successful." && return 0
+  fi
+
+  if timedatectl show | grep -q 'SystemClockSynchronized=yes'; then
+    log "[INFO] System clock synchronized after manual fallback."
+    return 0
+  fi
+
+  log "[FATAL] NTP synchronization completely failed. Aborting install to prevent clock errors."
+  exit 1
 }
 
 # --- Setup log directory ---
@@ -114,24 +136,8 @@ else
   log "[INFO] System clock appears to be within acceptable range: $(date)"
 fi
 
+# --- First NTP sync check ---
 ntp_sync_check
-
-# --- Ensure git is available ---
-if ! command -v git &>/dev/null; then
-  log "[INFO] Git not found. Installing minimal git support..."
-  apt update && apt install -y git >> "$LOG_FILE" 2>&1
-else
-  log "[INFO] Git is already installed."
-fi
-
-# --- Dry-run info ---
-if $DRY_RUN; then
-  log "[DRY-RUN] Would clone repo to: $INSTALL_DIR"
-  log "[DRY-RUN] Would checkout branch: $REPO_BRANCH"
-  log "[DRY-RUN] Would run: install.sh $ACTION"
-  log "ZTCloud bootstrap dry-run complete."
-  exit 0
-fi
 
 # --- Clone or pull repo ---
 if [[ ! -d "$INSTALL_DIR/.git" ]]; then
@@ -140,6 +146,17 @@ if [[ ! -d "$INSTALL_DIR/.git" ]]; then
 else
   log "[INFO] Installer already exists. Pulling latest updates..."
   git -C "$INSTALL_DIR" pull >> "$LOG_FILE" 2>&1
+fi
+
+# --- Second NTP sync verification ---
+ntp_sync_check
+
+# --- Ensure git is available ---
+if ! command -v git &>/dev/null; then
+  log "[INFO] Git not found. Installing minimal git support..."
+  apt update && apt install -y git >> "$LOG_FILE" 2>&1
+else
+  log "[INFO] Git is already installed."
 fi
 
 # --- Run main installer ---
