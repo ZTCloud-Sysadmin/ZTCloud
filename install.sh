@@ -1,68 +1,54 @@
 #!/bin/bash
 set -e
 
-# --- Basic logging setup inside install.sh ---
-LOG_DIR="/opt/log/installer"
-LOG_FILE="$LOG_DIR/ztcloud-install.log"
+# --- Define base paths ---
+ZT_BASE_DIR="/opt/ZTCloud"
+ZT_INSTALLER_DIR="$ZT_BASE_DIR/installer"
+ZT_SCRIPTS_DIR="$ZT_INSTALLER_DIR/scripts"
+ZT_LOG_DIR="/opt/log/installer"
+ZT_LOG_FILE="$ZT_LOG_DIR/ztcloud-install.log"
 
-mkdir -p "$LOG_DIR"
-touch "$LOG_FILE"
+mkdir -p "$ZT_LOG_DIR"
+touch "$ZT_LOG_FILE"
 
 timestamp() {
   date "+%Y-%m-%d %H:%M:%S"
 }
 
 log() {
-  echo "[$(timestamp)] $1" | tee -a "$LOG_FILE"
+  echo "[$(timestamp)] $1" | tee -a "$ZT_LOG_FILE"
 }
 
 log "ZTCloud new installer started."
 
-# --- Minimal install of required packages ---
-log "[INFO] Checking if Git and curl are installed..."
-apt update
-apt install -y git curl ca-certificates lsb-release gnupg software-properties-common unzip
-
-log "[INFO] Git and curl installed."
-
-# --- Clone the full repo immediately ---
-INSTALLER_BASE="/opt/ZTCloud/installer"
-SCRIPTS_DIR="$INSTALLER_BASE/scripts"
-REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"
-REPO_BRANCH="main"
-
-if [[ ! -d "$INSTALLER_BASE/.git" ]]; then
-  log "[INFO] Cloning repository into $INSTALLER_BASE..."
-  git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$INSTALLER_BASE"
-  log "[INFO] Clone completed."
+# --- Clone Git Repo ---
+if [[ -f "$ZT_SCRIPTS_DIR/git.sh" ]]; then
+  log "[INFO] Running git.sh to clone repository..."
+  ZT_INSTALLER_DIR="$ZT_INSTALLER_DIR" bash "$ZT_SCRIPTS_DIR/git.sh"
 else
-  log "[INFO] Repository already exists. Pulling latest changes..."
-  git -C "$INSTALLER_BASE" pull
-  log "[INFO] Pull completed."
+  log "[WARN] $ZT_SCRIPTS_DIR/git.sh not found. Skipping repository clone."
 fi
 
-# --- Make sure scripts are executable ---
-log "[INFO] Making all $SCRIPTS_DIR/*.sh executable..."
-chmod +x "$SCRIPTS_DIR"/*.sh || true
+# --- Make all scripts executable ---
+log "[INFO] Making all $ZT_SCRIPTS_DIR/*.sh executable..."
+chmod +x "$ZT_SCRIPTS_DIR"/*.sh || true
 
-# --- Now run modular scripts ---
+# --- Run modular scripts after repo is cloned ---
 
 # Run NTP sync
-if [[ -f "$SCRIPTS_DIR/ntp.sh" ]]; then
+if [[ -f "$ZT_SCRIPTS_DIR/ntp.sh" ]]; then
   log "[INFO] Running NTP sync (ntp.sh)..."
-  bash "$SCRIPTS_DIR/ntp.sh"
+  ZT_INSTALLER_DIR="$ZT_INSTALLER_DIR" bash "$ZT_SCRIPTS_DIR/ntp.sh"
 else
-  log "[WARN] $SCRIPTS_DIR/ntp.sh not found after clone!"
+  log "[WARN] $ZT_SCRIPTS_DIR/ntp.sh not found!"
 fi
 
-# Run system init
-if [[ -f "$SCRIPTS_DIR/init.sh" ]]; then
-  log "[INFO] Running base system setup (init.sh)..."
-  bash "$SCRIPTS_DIR/init.sh"
+# Run System Init (base packages)
+if [[ -f "$ZT_SCRIPTS_DIR/init.sh" ]]; then
+  log "[INFO] Running system initialization (init.sh)..."
+  ZT_INSTALLER_DIR="$ZT_INSTALLER_DIR" bash "$ZT_SCRIPTS_DIR/init.sh"
 else
-  log "[WARN] $SCRIPTS_DIR/init.sh not found after clone!"
+  log "[WARN] $ZT_SCRIPTS_DIR/init.sh not found!"
 fi
-
-# (Later: Call other modular scripts here)
 
 log "ZTCloud install.sh completed."

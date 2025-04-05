@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
 
-# --- Import logging ---
-source /opt/ZTCloud/scripts/log.sh
+# --- Import logging dynamically ---
+if [[ -z "$ZT_INSTALLER_DIR" ]]; then
+  ZT_INSTALLER_DIR="/opt/ZTCloud/installer"
+fi
+
+source "$ZT_INSTALLER_DIR/scripts/log.sh"
 
 log "[INFO] Starting NTP synchronization..."
 

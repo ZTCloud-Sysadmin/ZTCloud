@@ -1,21 +1,24 @@
 #!/bin/bash
 set -e
 
-# --- Import logging ---
-source /opt/ZTCloud/scripts/log.sh
+# --- Import logging dynamically ---
+if [[ -z "$ZT_INSTALLER_DIR" ]]; then
+  ZT_INSTALLER_DIR="/opt/ZTCloud/installer"
+fi
+
+source "$ZT_INSTALLER_DIR/scripts/log.sh"
 
 log "[INFO] Starting system initialization..."
 
-# Update package lists
-log "[INFO] Running apt update..."
+# --- Minimal install of required packages ---
+log "[INFO] Checking if Git, curl, and required packages are installed..."
 apt update
+apt install -y git curl ca-certificates lsb-release gnupg software-properties-common unzip
 
-# Install required base packages (NO wget, git now included)
-log "[INFO] Installing required base packages..."
-apt install -y curl unzip ca-certificates lsb-release gnupg software-properties-common git
+log "[INFO] Minimal required packages installed."
 
 # Confirm installation
-log "[INFO] Installed packages:"
-dpkg -l curl unzip ca-certificates lsb-release gnupg software-properties-common git | tee -a "$LOG_FILE"
+log "[INFO] Installed minimal packages overview:"
+dpkg -l git curl ca-certificates lsb-release gnupg software-properties-common unzip | tee -a "$ZT_LOG_FILE"
 
 log "[INFO] System initialization complete."

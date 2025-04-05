@@ -1,5 +1,20 @@
 # ZTCloud
+/opt/ZTCloud/
+├── install.sh                 # Main installer script (downloaded via wget)
+└── installer/                 # Cloned GitHub repository contents
+    ├── scripts/               # Modular install scripts
+    │   ├── log.sh             # Centralized logging module
+    │   ├── ntp.sh             # System clock synchronization (NTP setup)
+    │   ├── init.sh            # Base system package installation
+    │   ├── git.sh             # Git repository clone + permissions fix
+    │   └── (more modules...)  # Additional setup scripts (future expansion)
+    └── (other folders/files)  # Future: configuration templates, apps, etc.
 
+/opt/log/installer/
+└── ztcloud-install.log         # Unified log file for all install operations
+
+
+# Run Command
 wget -O - https://raw.githubusercontent.com/ZTCloud-Sysadmin/ZTCloud/main/install.sh | bash
 
 
