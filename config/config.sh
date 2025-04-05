@@ -32,11 +32,17 @@ BASE_PACKAGES=(
 # ------------------------------------------------------------
 INSTALLER_PIPELINE=(
     "packages.sh"
-    # Add other scripts as needed
+    "system-user.sh"
 )
 
 # ------------------------------------------------------------
 # Optional Flags
 # ------------------------------------------------------------
-SKIP_PACKAGE_INSTALL=false      # true to skip install_base_packages
-ENABLE_DRY_RUN=false            # true to simulate installation without making changes
+
+# Optional User Setup Settings
+DISABLE_SSH_PASSWORD_LOGIN=true
+
+# Installer Behavior Flags
+SKIP_PACKAGE_INSTALL=false       # true to skip install_base_packages
+ENABLE_DRY_RUN=false              # true to simulate installation without making changes
+RELOAD_SSHD_AT_END=true           # true to reload sshd safely at the end

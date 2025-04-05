@@ -125,6 +125,23 @@ for script in "${INSTALLER_PIPELINE[@]}"; do
     fi
 done
 
+# ------------------------------------------------------------
+# Step 8: Reload sshd at End if Needed
+# ------------------------------------------------------------
+if [ "$RELOAD_SSHD_AT_END" = "true" ]; then
+    log_info "Reloading sshd service safely at end of installer."
+    if [ "$ENABLE_DRY_RUN" = "true" ]; then
+        log_info "Dry-run: Would reload sshd. Skipping actual reload."
+    else
+        systemctl reload sshd
+        if [ $? -eq 0 ]; then
+            log_info "sshd reloaded successfully."
+        else
+            log_error "Failed to reload sshd. Manual check recommended."
+        fi
+    fi
+fi
+
 log_info "ZTCloud installer finished successfully."
 
 # Exit cleanly
