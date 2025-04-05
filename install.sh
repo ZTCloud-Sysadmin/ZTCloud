@@ -102,32 +102,25 @@ else
 fi
 
 # ------------------------------------------------------------
-# Step 7: Install Essential Base Packages
-# ------------------------------------------------------------
-if [ "$SKIP_PACKAGE_INSTALL" != "true" ]; then
-    bash "$SCRIPT_DIR/packages.sh"
-else
-    log_info "Skipping base package installation as configured."
-fi
-
-# ------------------------------------------------------------
-# Step 8: Start Modular Install Process
+# Step 7: Execute Scripts in INSTALLER_PIPELINE
 # ------------------------------------------------------------
 log_info "Starting modular installation process."
 
-for script in "$SCRIPT_DIR"/*.sh; do
-    [ -f "$script" ] || continue
-    script_name=$(basename "$script")
-    # Skip packages.sh to avoid reinstallation
-    if [[ "$script_name" == "packages.sh" ]]; then
-        continue
-    fi
-    log_info "Executing install script: $script_name"
-    
-    if [ "$ENABLE_DRY_RUN" = "true" ]; then
-        log_info "Dry-run: Would execute $script_name. Skipping."
+for script in "${INSTALLER_PIPELINE[@]}"; do
+    script_path="$SCRIPT_DIR/$script"
+    if [ -f "$script_path" ]; then
+        log_info "Executing install script: $script"
+        if [ "$ENABLE_DRY_RUN" = "true" ]; then
+            log_info "Dry-run: Would execute $script. Skipping."
+        else
+            bash "$script_path"
+            if [ $? -ne 0 ]; then
+                log_error "Execution of $script failed. Exiting."
+                exit 1
+            fi
+        fi
     else
-        bash "$script"
+        log_warn "Script $script not found in $SCRIPT_DIR. Skipping."
     fi
 done
 

@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # ============================================================
 # ZTCloud Configuration File
 # Location: /opt/ztcloud/config/config.sh
@@ -27,16 +25,18 @@ BASE_PACKAGES=(
 )
 
 # ------------------------------------------------------------
-# Application Install Flags
-# (Enable/Disable individual apps here)
+# Installer Pipeline
+# Define the order of script execution
 # ------------------------------------------------------------
-INSTALL_DOCKER=true
-INSTALL_TAILSCALE=true
-INSTALL_ETCD=false
-INSTALL_CADDY=false
+INSTALLER_PIPELINE=(
+    "packages.sh"
+    "some_install.sh"
+    "docker.sh"
+    # Add other scripts as needed
+)
 
 # ------------------------------------------------------------
 # Optional Flags
 # ------------------------------------------------------------
 SKIP_PACKAGE_INSTALL=false      # true to skip install_base_packages
-ENABLE_DRY_RUN=false             # true to simulate installation without making changes
+ENABLE_DRY_RUN=false            # true to simulate installation without making changes
