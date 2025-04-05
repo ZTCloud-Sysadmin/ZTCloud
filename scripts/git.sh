@@ -5,7 +5,7 @@ set -e
 source /opt/ZTCloud/scripts/log.sh
 
 # --- Variables ---
-INSTALL_DIR="/opt/ZTCloud/installer"
+INSTALL_DIR="/opt/ZTCloud/"
 SCRIPTS_DIR="/opt/ZTCloud/scripts"
 REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"
 REPO_BRANCH="main"
