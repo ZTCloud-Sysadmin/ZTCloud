@@ -6,17 +6,17 @@
 # ============================================================
 
 # ------------------------------------------------------------
-# Early minimal logger (before full repo is cloned)
+# Early Minimal Logger (Before Full Repo is Cloned)
 # ------------------------------------------------------------
 echo_info() { echo -e "\e[32m[INFO]  $(date '+%Y-%m-%d %H:%M:%S') $*\e[0m"; }
 echo_warn() { echo -e "\e[33m[WARN]  $(date '+%Y-%m-%d %H:%M:%S') $*\e[0m"; }
 echo_error() { echo -e "\e[31m[ERROR] $(date '+%Y-%m-%d %H:%M:%S') $*\e[0m"; }
 
 # ------------------------------------------------------------
-# Configuration (early before loading config.sh)
+# Configuration (Early Before Loading config.sh)
 # ------------------------------------------------------------
 BASE_DIR="/opt/ztcloud"
-GIT_REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"   # <--- CHANGE THIS to your real GitHub repo
+GIT_REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"   # Update this to your actual GitHub repository URL
 
 # ------------------------------------------------------------
 # Step 0: Parse Optional Arguments
@@ -33,15 +33,15 @@ for arg in "$@"; do
 done
 
 # ------------------------------------------------------------
-# Step 1: Ensure /opt/ztcloud exists
+# Step 1: Ensure $BASE_DIR Exists
 # ------------------------------------------------------------
 mkdir -p "$BASE_DIR"
 
 # ------------------------------------------------------------
-# Step 2: Ensure git is installed
+# Step 2: Ensure Git is Installed
 # ------------------------------------------------------------
 if ! command -v git >/dev/null 2>&1; then
-    echo_info "git not found. Installing git package..."
+    echo_info "Git not found. Installing git package..."
     if [ "$ENABLE_DRY_RUN" = "true" ]; then
         echo_info "Dry-run: Would install git. Skipping."
     else
@@ -52,11 +52,11 @@ if ! command -v git >/dev/null 2>&1; then
         fi
     fi
 else
-    echo_info "git already installed."
+    echo_info "Git is already installed."
 fi
 
 # ------------------------------------------------------------
-# Step 3: Clone repo if missing
+# Step 3: Clone Repo if Missing
 # ------------------------------------------------------------
 if [ ! -d "$BASE_DIR/.git" ]; then
     echo_info "Cloning ZTCloud repository into $BASE_DIR"
@@ -74,12 +74,12 @@ else
 fi
 
 # ------------------------------------------------------------
-# Step 4: Load full config and common functions
+# Step 4: Load Full Config and Common Functions
 # ------------------------------------------------------------
 source "$BASE_DIR/config/config.sh"
-source "$BASE_DIR/scripts/common.sh"
+source "$BASE_DIR/helpers/common.sh"
 
-# Make sure log directory exists
+# Ensure log directory exists
 mkdir -p "$LOG_DIR"
 
 # ------------------------------------------------------------
@@ -92,7 +92,7 @@ else
 fi
 
 # ------------------------------------------------------------
-# Step 6: Ensure all .sh files are executable
+# Step 6: Ensure All .sh Files are Executable
 # ------------------------------------------------------------
 log_info "Setting executable permissions on installer scripts."
 if [ "$ENABLE_DRY_RUN" = "true" ]; then
@@ -102,10 +102,10 @@ else
 fi
 
 # ------------------------------------------------------------
-# Step 7: Install essential base packages (curl, git, sudo)
+# Step 7: Install Essential Base Packages
 # ------------------------------------------------------------
 if [ "$SKIP_PACKAGE_INSTALL" != "true" ]; then
-    install_base_packages
+    bash "$SCRIPT_DIR/packages.sh"
 else
     log_info "Skipping base package installation as configured."
 fi
@@ -117,10 +117,15 @@ log_info "Starting modular installation process."
 
 for script in "$SCRIPT_DIR"/*.sh; do
     [ -f "$script" ] || continue
-    log_info "Executing install script: $(basename "$script")"
+    script_name=$(basename "$script")
+    # Skip packages.sh to avoid reinstallation
+    if [[ "$script_name" == "packages.sh" ]]; then
+        continue
+    fi
+    log_info "Executing install script: $script_name"
     
     if [ "$ENABLE_DRY_RUN" = "true" ]; then
-        log_info "Dry-run: Would execute $script. Skipping."
+        log_info "Dry-run: Would execute $script_name. Skipping."
     else
         bash "$script"
     fi

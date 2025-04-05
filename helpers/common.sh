@@ -2,7 +2,7 @@
 
 # ============================================================
 # ZTCloud Common Functions
-# Location: /opt/ztcloud/scripts/common.sh
+# Location: /opt/ztcloud/helpers/common.sh
 # ============================================================
 
 # ------------------------------------------------------------
@@ -18,14 +18,6 @@ else
     COLOR_INFO=""
     COLOR_WARN=""
     COLOR_ERROR=""
-fi
-
-# ------------------------------------------------------------
-# Safety: Check if BASE_PACKAGES is defined
-# ------------------------------------------------------------
-if [ -z "${BASE_PACKAGES[*]}" ]; then
-    echo -e "\e[31m[ERROR] BASE_PACKAGES not defined in config.sh. Please fix it.\e[0m"
-    exit 1
 fi
 
 # ------------------------------------------------------------
@@ -50,44 +42,13 @@ log_error() {
 }
 
 # ------------------------------------------------------------
-# Install essential base packages
-# ------------------------------------------------------------
-install_base_packages() {
-    log_info "Checking and installing base packages: ${BASE_PACKAGES[*]}"
-
-    local missing=()
-
-    for pkg in "${BASE_PACKAGES[@]}"; do
-        if ! dpkg -s "$pkg" >/dev/null 2>&1; then
-            log_warn "$pkg is not installed."
-            missing+=("$pkg")
-        else
-            log_info "$pkg is already installed."
-        fi
-    done
-
-    if [ ${#missing[@]} -gt 0 ]; then
-        log_info "Installing missing packages: ${missing[*]}"
-        apt-get update -y && apt-get install -y "${missing[@]}"
-        if [ $? -eq 0 ]; then
-            log_info "Successfully installed base packages."
-        else
-            log_error "Failed to install base packages. Exiting."
-            exit 1
-        fi
-    else
-        log_info "All base packages are already installed."
-    fi
-}
-
-# ------------------------------------------------------------
-# Git repository synchronization
+# Git Repository Synchronization
 # ------------------------------------------------------------
 sync_git_repo() {
     local repo_dir="$1"
 
     if [ ! -d "$repo_dir/.git" ]; then
-        log_error "No Git repo found in $repo_dir. Cannot sync."
+        log_error "No Git repository found in $repo_dir. Cannot sync."
         exit 1
     fi
 

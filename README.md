@@ -39,7 +39,7 @@ bash /opt/ztcloud/install.sh --dry-run
 ```
 or use the remote installer
 ```bash
-wget -O - https://raw.githubusercontent.com/ZTCloud-Sysadmin/ZTCloud/main/install.sh --dry-run | bash
+wget -O - https://raw.githubusercontent.com/ZTCloud-Sysadmin/ZTCloud/main/install.sh | bash -s -- --dry-run
 ```
 
 (Coming soon: full dry-run support across all modular scripts.)
