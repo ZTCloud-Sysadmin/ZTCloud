@@ -2,6 +2,8 @@
 # ZTCloud Configuration File
 # Location: /opt/ztcloud/config/config.sh
 # ============================================================
+# Installer Version
+INSTALLER_VERSION="v1.0.0"
 
 # ------------------------------------------------------------
 # Basic Directories
@@ -30,8 +32,6 @@ BASE_PACKAGES=(
 # ------------------------------------------------------------
 INSTALLER_PIPELINE=(
     "packages.sh"
-    "some_install.sh"
-    "docker.sh"
     # Add other scripts as needed
 )
 

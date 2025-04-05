@@ -11,6 +11,7 @@
 echo_info() { echo -e "\e[32m[INFO]  $(date '+%Y-%m-%d %H:%M:%S') $*\e[0m"; }
 echo_warn() { echo -e "\e[33m[WARN]  $(date '+%Y-%m-%d %H:%M:%S') $*\e[0m"; }
 echo_error() { echo -e "\e[31m[ERROR] $(date '+%Y-%m-%d %H:%M:%S') $*\e[0m"; }
+echo_info "Starting ZTCloud Installer - Version $INSTALLER_VERSION"
 
 # ------------------------------------------------------------
 # Configuration (Early Before Loading config.sh)
