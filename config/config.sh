@@ -24,6 +24,7 @@ GIT_REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"
 BASE_PACKAGES=(
     "curl"
     "sudo"
+    "openssh-client"
 )
 
 # ------------------------------------------------------------
