@@ -21,21 +21,15 @@ log() {
 
 ntp_sync_check() {
   log "[INFO] Verifying NTP synchronization..."
-  
-  local attempts=0
-  local max_attempts=3
 
-  while (( attempts < max_attempts )); do
-    if timedatectl show | grep -q 'SystemClockSynchronized=yes'; then
-      log "[INFO] NTP is synchronized. Current system time: $(date)"
-      return 0
-    fi
-    log "[WARN] NTP not yet synchronized. Waiting 10 seconds (attempt $((attempts + 1))/$max_attempts)..."
-    sleep 10
-    ((attempts++))
-  done
+  sleep 30
 
-  log "[ERROR] NTP synchronization failed after $((max_attempts * 10)) seconds. Attempting manual fallback sync using ntpdate..."
+  if timedatectl show | grep -q 'SystemClockSynchronized=yes'; then
+    log "[INFO] NTP is synchronized. Current system time: $(date)"
+    return 0
+  fi
+
+  log "[ERROR] NTP synchronization failed after 30 seconds. Attempting manual fallback sync using ntpdate..."
 
   if command -v ntpdate &>/dev/null; then
     ntpdate -u pool.ntp.org && log "[INFO] Manual fallback NTP sync successful." && return 0
