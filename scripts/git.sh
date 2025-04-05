@@ -2,11 +2,11 @@
 set -e
 
 # --- Import logging ---
-source /opt/ZTCloud/scripts/log.sh
+source /opt/ZTCloud/installer/scripts/log.sh
 
 # --- Variables ---
-INSTALL_DIR="/opt/ZTCloud/"
-SCRIPTS_DIR="/opt/ZTCloud/installer/scripts/"
+INSTALL_DIR="/opt/ZTCloud/installer"
+SCRIPTS_DIR="$INSTALL_DIR/scripts"
 REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"
 REPO_BRANCH="main"
 
@@ -24,7 +24,7 @@ else
 fi
 
 # --- Ensure scripts are executable ---
-log "[INFO] Fixing permissions for all /scripts/*.sh files..."
+log "[INFO] Fixing permissions for all $SCRIPTS_DIR/*.sh files..."
 chmod +x "$SCRIPTS_DIR"/*.sh || true
 
 log "[INFO] Scripts made executable."
