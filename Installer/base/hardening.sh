@@ -9,14 +9,36 @@ install_hardening() {
   ufw default deny incoming
   ufw default allow outgoing
   ufw allow OpenSSH
+  ufw allow 6022/tcp  # Pre-open port 6022 for future SSH move
   ufw --force enable
-  log_info "UFW configured and enabled."
+  log_info "UFW configured and enabled (OpenSSH + port 6022 allowed)."
 
- # SSH: Disable root login
-log_info "Hardening SSH configuration..."
-sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-log_info "SSH login hardened: root login disabled, password login disabled (changes take effect after restart)."
+  # SSH: Disable root login and password login
+  log_info "Hardening SSH configuration..."
+  sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+  sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+  log_info "SSH login hardened: root login disabled, password login disabled (changes take effect after restart)."
+
+  # Install and configure NTP hardening
+  log_info "Installing and hardening NTP services..."
+  apt install -y ntpdate systemd-timesyncd
+
+  systemctl enable systemd-timesyncd
+  systemctl start systemd-timesyncd
+
+  # Force initial NTP sync with pool.ntp.org
+  ntpdate -u pool.ntp.org
+
+  # Optional: Customize systemd-timesyncd config
+  TIMESYNC_CONF="/etc/systemd/timesyncd.conf"
+  if [[ -f "$TIMESYNC_CONF" ]]; then
+    sed -i 's|^#*NTP=.*|NTP=pool.ntp.org|' "$TIMESYNC_CONF"
+    sed -i 's|^#*FallbackNTP=.*|FallbackNTP=pool.ntp.org|' "$TIMESYNC_CONF"
+    systemctl restart systemd-timesyncd
+    log_info "Systemd-timesyncd configured to use pool.ntp.org."
+  else
+    log_warn "Could not find $TIMESYNC_CONF to customize."
+  fi
 
   # Enable automatic security updates
   log_info "Installing unattended-upgrades non-interactively..."

@@ -9,6 +9,7 @@ LOG_FILE="$LOG_DIR/ztcloud-bootstrap.log"
 ACTION="$1"
 DRY_RUN=false
 FORCE_CLOCK_RESET=false
+FORCE_UTC=true  # Default: Force UTC unless --no-utc is used
 
 timestamp() {
   date "+%Y-%m-%d %H:%M:%S"
@@ -46,15 +47,42 @@ fi
 if [[ "$ACTION" == "--force-clock-reset" ]]; then
   FORCE_CLOCK_RESET=true
   ACTION="$2"
-elif [[ "$1" == "--dry-run" && "$2" == "--force-clock-reset" ]]; then
+elif [[ "$ACTION" == "--dry-run" && "$2" == "--force-clock-reset" ]]; then
   DRY_RUN=true
   FORCE_CLOCK_RESET=true
   ACTION="$3"
 fi
 
+if [[ "$ACTION" == "--no-utc" ]]; then
+  FORCE_UTC=false
+  ACTION="$2"
+elif [[ "$ACTION" == "--dry-run" && "$2" == "--no-utc" ]]; then
+  DRY_RUN=true
+  FORCE_UTC=false
+  ACTION="$3"
+fi
+
 if [[ -z "$ACTION" ]]; then
-  log "[ERROR] Usage: $0 [--dry-run] [--force-clock-reset] [--init | --deploy]"
+  log "[ERROR] Usage: $0 [--dry-run] [--force-clock-reset] [--no-utc] [--init | --deploy]"
   exit 1
+fi
+
+# --- Bootstrap Summary ---
+log "---------------------------------"
+log "ZTCloud Bootstrap Configuration:"
+log " Timezone enforcement: $(if $FORCE_UTC; then echo 'UTC'; else echo 'System default'; fi)"
+log " Clock reset: $(if $FORCE_CLOCK_RESET; then echo 'enabled'; else echo 'disabled'; fi)"
+log " Dry-run mode: $(if $DRY_RUN; then echo 'enabled'; else echo 'disabled'; fi)"
+log " Action: $ACTION"
+log "---------------------------------"
+
+# --- Optional force UTC timezone ---
+if $FORCE_UTC; then
+  log "[INFO] Forcing timezone to UTC..."
+  timedatectl set-timezone UTC
+  log "[INFO] Timezone is now set to: $(timedatectl show -p Timezone --value)"
+else
+  log "[INFO] Skipping timezone change. System timezone remains: $(timedatectl show -p Timezone --value)"
 fi
 
 # --- Optional forced clock reset ---
