@@ -1,5 +1,14 @@
 # ZTCloud
 
+wget -O - https://raw.githubusercontent.com/ZTCloud-Sysadmin/ZTCloud/main/install.sh | bash
+
+
+
+
+
+
+
+# OLD ISTALLER
 Normal run:
 ```bash
 wget -O - https://raw.githubusercontent.com/ZTCloud-Sysadmin/ZTCloud/main/bootstrap.sh | bash -s -- --init
