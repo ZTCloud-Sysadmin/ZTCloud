@@ -27,12 +27,21 @@ ZTCloud is a modular installer system to manage multiple VPS servers with a clea
 ```bash
 bash /opt/ztcloud/install.sh
 ```
+or use the remote installer
+```bash
+wget -O - https://raw.githubusercontent.com/ZTCloud-Sysadmin/ZTCloud/main/install.sh | bash
+```
 
 Dry-run mode (simulate install without making changes):
 
 ```bash
 bash /opt/ztcloud/install.sh --dry-run
 ```
+or use the remote installer
+```bash
+wget -O - https://raw.githubusercontent.com/ZTCloud-Sysadmin/ZTCloud/main/install.sh --dry-run | bash
+```
+
 (Coming soon: full dry-run support across all modular scripts.)
 
 ⚙️ Base System Requirements

@@ -16,7 +16,7 @@ echo_error() { echo -e "\e[31m[ERROR] $(date '+%Y-%m-%d %H:%M:%S') $*\e[0m"; }
 # Configuration (early before loading config.sh)
 # ------------------------------------------------------------
 BASE_DIR="/opt/ztcloud"
-GIT_REPO_URL="https://your-git-repo-url.git"   # <--- CHANGE THIS to your real GitHub repo
+GIT_REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"   # <--- CHANGE THIS to your real GitHub repo
 
 # ------------------------------------------------------------
 # Step 0: Parse Optional Arguments

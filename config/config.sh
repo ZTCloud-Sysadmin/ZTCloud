@@ -16,14 +16,13 @@ LOG_DIR="$BASE_DIR/log"
 # ------------------------------------------------------------
 # Git Repo Settings
 # ------------------------------------------------------------
-GIT_REPO_URL="https://your-git-repo-url.git"
+GIT_REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"
 
 # ------------------------------------------------------------
 # Base Packages to Install (essential system tools)
 # ------------------------------------------------------------
 BASE_PACKAGES=(
     "curl"
-    "git"
     "sudo"
 )
 
