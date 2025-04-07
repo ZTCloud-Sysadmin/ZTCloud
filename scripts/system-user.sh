@@ -18,10 +18,20 @@ USER_SYSADMIN="ztcl-sysadmin"
 # ------------------------------------------------------------
 create_system_user() {
     log_info "Creating system user $USER_SYSADMIN"
-    if ! id "$USER_SYSADMIN" >/dev/null 2>&1; then
+
+    if id "$USER_SYSADMIN" >/dev/null 2>&1; then
+        log_warn "User $USER_SYSADMIN already exists. Skipping creation."
+        return
+    fi
+
+    # Check if UID or GID already exist
+    if getent passwd "$ZTCL_SYSADMIN_UID" >/dev/null || getent group "$ZTCL_SYSADMIN_GID" >/dev/null; then
+        log_warn "UID $ZTCL_SYSADMIN_UID or GID $ZTCL_SYSADMIN_GID already in use. Creating user with automatic UID/GID."
         useradd -m -s /bin/bash "$USER_SYSADMIN"
     else
-        log_warn "User $USER_SYSADMIN already exists. Skipping creation."
+        log_info "Creating $USER_SYSADMIN with UID=$ZTCL_SYSADMIN_UID and GID=$ZTCL_SYSADMIN_GID"
+        groupadd -g "$ZTCL_SYSADMIN_GID" "$USER_SYSADMIN"
+        useradd -m -s /bin/bash -u "$ZTCL_SYSADMIN_UID" -g "$ZTCL_SYSADMIN_GID" "$USER_SYSADMIN"
     fi
 }
 

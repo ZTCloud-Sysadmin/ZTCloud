@@ -11,13 +11,12 @@
 echo_info() { echo -e "\e[32m[INFO]  $(date '+%Y-%m-%d %H:%M:%S') $*\e[0m"; }
 echo_warn() { echo -e "\e[33m[WARN]  $(date '+%Y-%m-%d %H:%M:%S') $*\e[0m"; }
 echo_error() { echo -e "\e[31m[ERROR] $(date '+%Y-%m-%d %H:%M:%S') $*\e[0m"; }
-echo_info "Starting ZTCloud Installer - Version $INSTALLER_VERSION"
 
 # ------------------------------------------------------------
 # Configuration (Early Before Loading config.sh)
 # ------------------------------------------------------------
 BASE_DIR="/opt/ztcloud"
-GIT_REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"   # Update this to your actual GitHub repository URL
+GIT_REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"
 
 # ------------------------------------------------------------
 # Step 0: Parse Optional Arguments
@@ -79,6 +78,8 @@ fi
 # ------------------------------------------------------------
 source "$BASE_DIR/config/config.sh"
 source "$BASE_DIR/helpers/common.sh"
+
+echo_info "Starting ZTCloud Installer - Version $INSTALLER_VERSION"
 
 # Ensure log directory exists
 mkdir -p "$LOG_DIR"
@@ -142,7 +143,23 @@ if [ "$RELOAD_SSHD_AT_END" = "true" ]; then
     fi
 fi
 
-log_info "ZTCloud installer finished successfully."
+# ------------------------------------------------------------
+# Step 9: Validation Phase (Optional)
+# ------------------------------------------------------------
+if [ "$RUN_VALIDATION_AFTER_INSTALL" = "true" ]; then
+    log_info "Starting full system validation after install."
 
-# Exit cleanly
+    bash "$BASE_DIR/validate/validate.sh"
+    if [ $? -eq 0 ]; then
+        log_info "All system validation checks passed 🎯"
+    else
+        log_error "Some validation checks failed ❌. Please review logs!"
+        exit 1
+    fi
+fi
+
+# ------------------------------------------------------------
+# Step 10: Done
+# ------------------------------------------------------------
+log_info "ZTCloud installer and validation completed successfully 🚀"
 exit 0

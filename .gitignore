@@ -4,6 +4,9 @@ token.txt
 #Tmate Debuggin
 tmate/
 
+# Ignore local Panel folder
+/panel/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
