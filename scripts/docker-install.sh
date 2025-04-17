@@ -5,6 +5,8 @@
 # Location: $BASE_DIR/scripts/docker-install.sh
 # ============================================================
 
+source "$BASE_DIR/helpers/common.sh"
+
 log_info "Starting Docker installation..."
 
 # Create container directories if they don't exist
