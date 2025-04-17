@@ -39,6 +39,7 @@ BASE_PACKAGES=(
 # ------------------------------------------------------------
 INSTALLER_PIPELINE=(
     "packages.sh"
+    "docker-install.sh"
     # Add other scripts as needed
 )
 
