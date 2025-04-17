@@ -5,6 +5,7 @@
 # Location: $BASE_DIR/scripts/docker-install.sh
 # ============================================================
 
+BASE_DIR="/opt/ztcloud"
 source "$BASE_DIR/helpers/common.sh"
 
 log_info "Starting Docker installation..."
