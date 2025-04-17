@@ -13,6 +13,10 @@ SCRIPT_DIR="$BASE_DIR/scripts"
 CONFIG_DIR="$BASE_DIR/config"
 LOG_DIR="$BASE_DIR/log"
 
+CONTAINERS_DIR="$BASE_DIR/containers"
+IMAGES_DIR="$CONTAINERS_DIR/images"
+NON_PERSISTANT_DIR="$CONTAINERS_DIR/non-persistant"
+
 # ------------------------------------------------------------
 # Git Repo Settings
 # ------------------------------------------------------------
@@ -24,6 +28,9 @@ GIT_REPO_URL="https://github.com/ZTCloud-Sysadmin/ZTCloud.git"
 BASE_PACKAGES=(
     "curl"
     "sudo"
+    "ca-certificates"
+    "gnupg"
+    "lsb-release"
 )
 
 # ------------------------------------------------------------
