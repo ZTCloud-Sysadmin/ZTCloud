@@ -1,5 +1,4 @@
-# Redefine docker-install.sh without container path declarations (since they are in config.sh now)
-cleaned_docker_install_script = """#!/bin/bash
+#!/bin/bash
 
 # ============================================================
 # Docker Installer Script for ZTCloud
@@ -27,7 +26,7 @@ chmod a+r /etc/apt/keyrings/docker.gpg
 
 # Set up the Docker repository
 echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(. /etc/os-release && echo "$ID") \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(. /etc/os-release && echo \"$ID\") \
   $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
 
 # Update and install Docker packages
@@ -39,11 +38,3 @@ systemctl enable docker
 systemctl start docker
 
 log_info "Docker installation completed successfully."
-"""
-
-# Overwrite the docker-install.sh script with the cleaned version
-with open(docker_install_path, "w") as f:
-    f.write(cleaned_docker_install_script)
-
-# Confirm success
-"docker-install.sh updated to use shared container path variables from config.sh"
